@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 	"path/filepath"
+
+	"github.com/suryasaputra2016/lenslockeda/views"
 )
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
@@ -23,17 +24,13 @@ func contactHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func executeTemplate(w http.ResponseWriter, path string) {
-	tpl, err := template.ParseFiles(path)
+	tpl, err := views.Parse(path)
 	if err != nil {
-		log.Printf("Parsing template: %v", err)
+		log.Printf("parsing template: %v", err)
 		http.Error(w, "There was an error in parsing template", http.StatusInternalServerError)
 	}
 
-	err = tpl.Execute(w, nil)
-	if err != nil {
-		log.Printf("Executing template: %v", err)
-		http.Error(w, "There was an error in executing template", http.StatusInternalServerError)
-	}
+	tpl.Execute(w, nil)
 }
 
 type Router struct{}
