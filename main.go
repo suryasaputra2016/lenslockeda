@@ -2,54 +2,27 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"path/filepath"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/suryasaputra2016/lenslockeda/controllers"
 	"github.com/suryasaputra2016/lenslockeda/views"
 )
 
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-
-	path := filepath.Join("templates", "home.gohtml")
-	executeTemplate(w, path)
-}
-
-func contactHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-
-	path := filepath.Join("templates", "contact.gohtml")
-	executeTemplate(w, path)
-}
-
-func executeTemplate(w http.ResponseWriter, path string) {
-	tpl, err := views.Parse(path)
-	if err != nil {
-		log.Printf("parsing template: %v", err)
-		http.Error(w, "There was an error in parsing template", http.StatusInternalServerError)
-	}
-
-	tpl.Execute(w, nil)
-}
-
-type Router struct{}
-
-func (router Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	switch r.URL.Path {
-	case "/":
-		homeHandler(w, r)
-	case "/contact":
-		contactHandler(w, r)
-	default:
-		http.Error(w, "Page not found", http.StatusNotFound)
-	}
-
-}
-
 func main() {
-	var router Router
+	r := chi.NewRouter()
 
-	fmt.Println("Serving on :3000")
-	http.ListenAndServe(":3000", router)
+	tpl := views.Must(views.Parse(filepath.Join("templates", "home.gohtml")))
+	r.Get("/", controllers.StaticHandler(tpl))
+
+	tpl = views.Must(views.Parse(filepath.Join("templates", "contact.gohtml")))
+	r.Get("/contact", controllers.StaticHandler(tpl))
+
+	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "page not found", http.StatusNotFound)
+	})
+
+	fmt.Println("Starting the server on :3000...")
+	http.ListenAndServe(":3000", r)
 }
